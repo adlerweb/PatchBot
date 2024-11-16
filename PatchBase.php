@@ -1,6 +1,7 @@
 <?php
 
 require('HostOption.php');
+require('PatchCache.php');
 
 abstract class PatchBase {
 	protected $patch;
@@ -21,9 +22,19 @@ abstract class PatchBase {
 		return $this->patch;
 	}
 	abstract function check() : bool;
-	protected function fetch(string $url, array $opts = array()) : bool {
+	protected function fetch(string $url, array $opts = array(), $cache=false) : bool {
+		if ($cache) {
+			$cid = hash('sha256', serialize([$url, $opts]));
+			if (PatchCache::exists($cid)) {
+				$this->data = PatchCache::get($cid);
+				return true;
+			}
+		}
 		$str = $this->curl($url, $opts);
 		if ($str) {
+			if ($cache) {
+				PatchCache::set($cid, $str);
+			}
 			$this->data = $str;
 			return true;
 		}
