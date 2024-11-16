@@ -88,6 +88,21 @@ abstract class PatchBase {
 		}
 		return false;
 	}
+	protected function parse_newest(string $re) : bool {
+		if (!preg_match_all($re, $this->data, $m))
+			return false;
+		unset($m[0]);
+		$vout = false;
+		foreach ($m[1] as $ver) {
+			if(!$vout || version_compare($vout, $ver, "<"))
+				$vout = $ver;
+		}
+		if ($vout) {
+			$this->patch->setVersion($vout, true);
+			return true;
+		}
+		return false;
+	}
 	protected function parse_json(string $key, string $re = '/(.*)/') : bool {
 		$it = new \RecursiveIteratorIterator(new \RecursiveArrayIterator($this->data));
 		foreach ($it as $k => $v) {
